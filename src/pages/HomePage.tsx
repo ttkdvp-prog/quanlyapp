@@ -185,7 +185,7 @@ export default function HomePage() {
     refetchOnWindowFocus: false,
   });
 
-  const baseApps = rawApps ?? [];
+  const baseApps = useMemo(() => rawApps ?? [], [rawApps]);
 
   // Live streaming updates
   const { rows: liveApps } = useSheetStream("apps", baseApps, { intervalMs: 30_000 });
