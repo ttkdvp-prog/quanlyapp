@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Plus, ExternalLink, ChevronRight, AlertCircle, Loader2, Link2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, Plus, ExternalLink, ChevronRight, AlertCircle, Loader2, Link2, Pencil, Trash2 } from "lucide-react";
 import { api, parseApp } from "../lib/apiClient";
 import { useSheetStream } from "../lib/useSheetStream";
 import type { App, ParsedApp } from "../types";
 import AppFormModal from "../components/AppFormModal";
+import { toast } from "sonner";
 
 // Category order and colors
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; border: string; dot: string }> = {
@@ -50,11 +51,13 @@ function getRoleBadge(role: string) {
 }
 
 // App Card component
-function AppCard({ app }: { app: ParsedApp }) {
+function AppCard({ app, onEdit, onDelete }: { app: ParsedApp; onEdit: (a: ParsedApp) => void; onDelete: (a: ParsedApp) => void }) {
   const isEmoji = app.icon && app.icon.length <= 4 && !/^https?:\/\//.test(app.icon);
   const roleBadge = getRoleBadge(app.access_role);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking edit/delete buttons
+    if ((e.target as HTMLElement).closest(".card-action-btn")) return;
     if (app.url && app.url !== "#") {
       window.open(app.url, "_blank", "noopener,noreferrer");
     }
@@ -67,10 +70,28 @@ function AppCard({ app }: { app: ParsedApp }) {
       role="link"
       tabIndex={0}
       aria-label={`Mở ${app.name}`}
-      onKeyDown={(e) => e.key === "Enter" && handleClick()}
+      onKeyDown={(e) => e.key === "Enter" && handleClick(e as unknown as React.MouseEvent)}
     >
       {/* Hover shimmer */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/3 group-hover:to-indigo-500/3 transition-all duration-300 rounded-2xl pointer-events-none" />
+
+      {/* Edit / Delete action buttons — appear on hover */}
+      <div className="card-action-btn absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(app); }}
+          title="Chỉnh sửa"
+          className="card-action-btn w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 shadow-sm transition-all"
+        >
+          <Pencil size={13} />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(app); }}
+          title="Xóa"
+          className="card-action-btn w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 shadow-sm transition-all"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
 
       <div className="flex items-start gap-3">
         {/* Icon */}
@@ -133,7 +154,7 @@ function AppCard({ app }: { app: ParsedApp }) {
 }
 
 // Category Section component
-function CategorySection({ category, apps }: { category: string; apps: ParsedApp[] }) {
+function CategorySection({ category, apps, onEdit, onDelete }: { category: string; apps: ParsedApp[]; onEdit: (a: ParsedApp) => void; onDelete: (a: ParsedApp) => void }) {
   const cfg = CATEGORY_CONFIG[category] || {
     color: "text-slate-700",
     bg: "bg-slate-50",
@@ -154,7 +175,7 @@ function CategorySection({ category, apps }: { category: string; apps: ParsedApp
       </div>
       <div className="grid grid-cols-2 @md:grid-cols-2 @lg:grid-cols-3 @xl:grid-cols-4 gap-3">
         {apps.map((app) => (
-          <AppCard key={app.id} app={app} />
+          <AppCard key={app.id} app={app} onEdit={onEdit} onDelete={onDelete} />
         ))}
       </div>
     </div>
@@ -168,6 +189,8 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingApp, setEditingApp] = useState<ParsedApp | null>(null);
+  const queryClient = useQueryClient();
 
   // Fetch apps from Google Sheets
   const {
@@ -189,6 +212,25 @@ export default function HomePage() {
 
   // Live streaming updates
   const { rows: liveApps } = useSheetStream("apps", baseApps, { intervalMs: 30_000 });
+
+  const handleDelete = async (app: ParsedApp) => {
+    toast(`Xóa "${app.name}"?`, {
+      action: {
+        label: "Xóa",
+        onClick: async () => {
+          try {
+            await api.delete("apps", app.id);
+            toast.success(`Đã xóa "${app.name}"`);
+            queryClient.invalidateQueries({ queryKey: ["apps"] });
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Xóa thất bại");
+          }
+        },
+      },
+      cancel: { label: "Hủy", onClick: () => {} },
+      duration: 8000,
+    });
+  };
 
   // Filter & group
   const filteredApps = useMemo(() => {
@@ -354,7 +396,7 @@ export default function HomePage() {
             ) : null}
 
             {sortedCategories.map((cat) => (
-              <CategorySection key={cat} category={cat} apps={grouped[cat]} />
+              <CategorySection key={cat} category={cat} apps={grouped[cat]} onEdit={setEditingApp} onDelete={handleDelete} />
             ))}
           </>
         )}
@@ -366,7 +408,19 @@ export default function HomePage() {
           onClose={() => setShowAddModal(false)}
           onSaved={() => {
             setShowAddModal(false);
-            refetch();
+            queryClient.invalidateQueries({ queryKey: ["apps"] });
+          }}
+        />
+      )}
+
+      {/* Edit App Modal */}
+      {editingApp && (
+        <AppFormModal
+          editApp={editingApp}
+          onClose={() => setEditingApp(null)}
+          onSaved={() => {
+            setEditingApp(null);
+            queryClient.invalidateQueries({ queryKey: ["apps"] });
           }}
         />
       )}

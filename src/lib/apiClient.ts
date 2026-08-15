@@ -61,6 +61,9 @@ export const api = {
   remove: (table: string, id: string) =>
     call<{ id: string; deleted: true }>("POST", { action: "delete", table, id }),
 
+  delete: (table: string, id: string) =>
+    call<{ id: string; deleted: true }>("POST", { action: "delete", table, id }),
+
   stream: <T>(table: string, since: number) =>
     call<T[]>("GET", { action: "stream", table, since }),
 };
