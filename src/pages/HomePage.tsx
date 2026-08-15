@@ -86,13 +86,13 @@ function AppCard({ app }: { app: ParsedApp }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-slate-800 text-sm leading-tight truncate group-hover:text-blue-700 transition-colors">
+          <div className="flex items-start justify-between gap-1.5">
+            <h3 className="font-semibold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-blue-700 transition-colors flex-1">
               {app.name}
             </h3>
             {roleBadge && (
-              <span className="shrink-0 badge bg-red-50 text-red-600 border border-red-100">
-                🔒 {roleBadge}
+              <span className="shrink-0 badge bg-red-50 text-red-600 border border-red-100 text-[10px] mt-0.5">
+                🔒
               </span>
             )}
           </div>
@@ -152,7 +152,7 @@ function CategorySection({ category, apps }: { category: string; apps: ParsedApp
           {apps.length} ứng dụng
         </span>
       </div>
-      <div className="grid grid-cols-1 @xs:grid-cols-1 @sm:grid-cols-2 @md:grid-cols-2 @lg:grid-cols-3 @xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 @md:grid-cols-2 @lg:grid-cols-3 @xl:grid-cols-4 gap-3">
         {apps.map((app) => (
           <AppCard key={app.id} app={app} />
         ))}
