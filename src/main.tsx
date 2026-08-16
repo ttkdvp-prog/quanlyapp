@@ -6,7 +6,6 @@ import { Toaster } from "sonner";
 import AppShell from "./components/AppShell";
 import HomePage from "./pages/HomePage";
 import UsersPage from "./pages/UsersPage";
-import GuidePage from "./pages/GuidePage";
 import "./index.css";
 
 const qc = new QueryClient({
@@ -27,7 +26,6 @@ createRoot(document.getElementById("root")!).render(
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
             <Route path="users" element={<UsersPage />} />
-            <Route path="guide" element={<GuidePage />} />
           </Route>
         </Routes>
       </BrowserRouter>

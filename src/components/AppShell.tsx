@@ -3,12 +3,10 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutGrid,
   Users,
-  BookOpen,
   Menu,
   X,
   Grid3X3,
   Bell,
-  HelpCircle,
   RefreshCw,
   ChevronDown,
 } from "lucide-react";
@@ -38,7 +36,6 @@ export default function AppShell() {
                 </div>
                 <div>
                   <div className="font-bold text-slate-900 text-sm leading-none">Quản Lý App</div>
-                  <div className="text-xs text-slate-400 mt-0.5">Hệ thống quản lý app v2.0</div>
                 </div>
               </div>
               <button
@@ -67,20 +64,6 @@ export default function AppShell() {
                   {item.label}
                 </NavLink>
               ))}
-              <NavLink
-                to="/guide"
-                onClick={() => setDrawerOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-150 ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`
-                }
-              >
-                <BookOpen size={18} />
-                Hướng dẫn
-              </NavLink>
             </nav>
           </aside>
         </div>
@@ -98,7 +81,6 @@ export default function AppShell() {
               </div>
               <div className="hidden sm:block">
                 <div className="font-bold text-slate-900 text-sm leading-none">Quản Lý App</div>
-                <div className="text-xs text-slate-400 mt-0.5">Hệ thống quản lý app Version 2.0</div>
               </div>
             </div>
 
@@ -125,21 +107,6 @@ export default function AppShell() {
 
             {/* Right side actions */}
             <div className="ml-auto flex items-center gap-2">
-              {/* Guide button */}
-              <NavLink
-                to="/guide"
-                className={({ isActive }) =>
-                  `hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`
-                }
-              >
-                <HelpCircle size={15} />
-                Hướng dẫn
-              </NavLink>
-
               {/* Refresh button */}
               <button
                 type="button"

@@ -354,7 +354,7 @@ export default function HomePage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 size={40} className="spinner text-blue-500" />
-            <p className="text-slate-500 text-sm">Đang tải dữ liệu từ Google Sheets...</p>
+            <p className="text-slate-500 text-sm">Đang tải dữ liệu...</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
