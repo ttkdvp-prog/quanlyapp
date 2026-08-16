@@ -69,9 +69,28 @@ function strip(row: Row) {
   return out;
 }
 
+function parseBody(raw: unknown): Record<string, unknown> {
+  if (!raw) return {};
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (Buffer.isBuffer(raw)) {
+    try {
+      return JSON.parse(raw.toString("utf8"));
+    } catch {
+      return {};
+    }
+  }
+  return raw as Record<string, unknown>;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const p: Record<string, unknown> =
-    req.method === "POST" ? { ...req.query, ...(req.body || {}) } : { ...req.query };
+    req.method === "POST" ? { ...req.query, ...parseBody(req.body) } : { ...req.query };
 
   try {
     if (!API_KEY) throw new Error("API_KEY not configured on server");
