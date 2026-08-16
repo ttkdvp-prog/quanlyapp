@@ -1,7 +1,11 @@
 import type { App, ParsedApp } from "../types";
 
-const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL as string;
+// Prefer the same-origin Vercel serverless function (/api/sheets, uses a Google
+// service account server-side). Falls back to a Google Apps Script Web App URL
+// if VITE_APPS_SCRIPT_URL is set instead.
+const SCRIPT_URL = (import.meta.env.VITE_APPS_SCRIPT_URL as string) || "/api/sheets";
 const API_KEY = import.meta.env.VITE_API_KEY as string;
+const DEMO_MODE = (import.meta.env.VITE_DEMO_MODE as string) === "true";
 
 type Envelope<T> = {
   ok: boolean;
@@ -17,8 +21,8 @@ async function call<T>(
 ): Promise<Envelope<T>> {
   const body = { ...payload, apiKey: API_KEY };
 
-  // Demo mode: if no script URL configured, return mock data
-  if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+  // Demo mode: return mock data instead of hitting a backend
+  if (DEMO_MODE || SCRIPT_URL.includes("PASTE_YOUR")) {
     return getMockData<T>(payload) as Envelope<T>;
   }
 
