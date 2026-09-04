@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  LayoutGrid,
+  MapPin,
   Users,
   Menu,
   X,
-  Grid3X3,
   Bell,
   RefreshCw,
   ChevronDown,
 } from "lucide-react";
 
 const NAV = [
-  { to: "/", label: "Địa chỉ", icon: Grid3X3 },
+  { to: "/", label: "Địa chỉ", icon: MapPin },
   { to: "/users", label: "Người dùng", icon: Users },
 ];
 
@@ -32,7 +31,7 @@ export default function AppShell() {
             <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-                  <LayoutGrid size={18} className="text-white" />
+                  <MapPin size={18} className="text-white" />
                 </div>
                 <div>
                   <div className="font-bold text-slate-900 text-sm leading-none">Địa chỉ</div>
@@ -77,7 +76,7 @@ export default function AppShell() {
             {/* Logo */}
             <div className="flex items-center gap-3 mr-4">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shrink-0">
-                <LayoutGrid size={17} className="text-white" />
+                <MapPin size={17} className="text-white" />
               </div>
               <div className="hidden sm:block">
                 <div className="font-bold text-slate-900 text-sm leading-none">Địa chỉ</div>
