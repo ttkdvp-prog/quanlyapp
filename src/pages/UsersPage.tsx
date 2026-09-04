@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/apiClient";
 import type { User } from "../types";
 
-const DEPARTMENTS = ["Tất cả", "IT", "Kế toán", "Marketing", "Nhân sự", "Kinh doanh", "Ban giám đốc"];
+const DEPARTMENTS = ["Tất cả", "Ban giám đốc"];
 
 function UserCard({ user }: { user: User }) {
   const isActive = user.active === true || String(user.active).toUpperCase() === "TRUE";
