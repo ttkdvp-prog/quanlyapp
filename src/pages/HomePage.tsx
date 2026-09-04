@@ -9,33 +9,33 @@ import { toast } from "sonner";
 
 // Category order and colors
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; border: string; dot: string }> = {
-  "KẾ TOÁN": {
-    color: "text-blue-700",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    dot: "bg-blue-500",
-  },
-  "MARKETING": {
-    color: "text-emerald-700",
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
-    dot: "bg-emerald-500",
-  },
-  "NHÂN SỰ": {
-    color: "text-violet-700",
-    bg: "bg-violet-50",
-    border: "border-violet-200",
-    dot: "bg-violet-500",
-  },
   "TIỆN ÍCH": {
     color: "text-amber-700",
     bg: "bg-amber-50",
     border: "border-amber-200",
     dot: "bg-amber-500",
   },
+  "Googsheet": {
+    color: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  "ứng dụng": {
+    color: "text-blue-700",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    dot: "bg-blue-500",
+  },
+  "công việc": {
+    color: "text-violet-700",
+    bg: "bg-violet-50",
+    border: "border-violet-200",
+    dot: "bg-violet-500",
+  },
 };
 
-const CATEGORY_ORDER = ["KẾ TOÁN", "MARKETING", "NHÂN SỰ", "TIỆN ÍCH"];
+const CATEGORY_ORDER = ["TIỆN ÍCH", "Googsheet", "ứng dụng", "công việc"];
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
