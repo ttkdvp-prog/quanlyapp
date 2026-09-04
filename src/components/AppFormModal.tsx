@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { api } from "../lib/apiClient";
 import { toast } from "sonner";
@@ -43,6 +43,8 @@ export default function AppFormModal({ onClose, onSaved, existingCategories = []
   });
 
   const [links, setLinks] = useState<AppLink[]>(editApp?.links ?? []);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const categoryBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setField = (key: keyof typeof form, value: string | number) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -154,24 +156,51 @@ export default function AppFormModal({ onClose, onSaved, existingCategories = []
 
           {/* Category & Role */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="relative">
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
                 Nhóm danh mục
               </label>
               <input
                 type="text"
-                list="category-suggestions"
                 value={form.category}
                 onChange={(e) => setField("category", e.target.value)}
+                onFocus={() => {
+                  if (categoryBlurTimer.current) clearTimeout(categoryBlurTimer.current);
+                  setCategoryOpen(true);
+                }}
+                onBlur={() => {
+                  // Delay so a click on a suggestion registers before the list unmounts
+                  categoryBlurTimer.current = setTimeout(() => setCategoryOpen(false), 150);
+                }}
                 placeholder="Ví dụ: NHÂN SỰ"
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
                 required
+                autoComplete="off"
               />
-              <datalist id="category-suggestions">
-                {existingCategories.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
+              {categoryOpen && existingCategories.length > 0 && (() => {
+                const q = form.category.trim().toLowerCase();
+                const options = existingCategories.filter(
+                  (c) => !q || c.toLowerCase().includes(q)
+                );
+                if (options.length === 0) return null;
+                return (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-y-auto py-1">
+                    {options.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          setField("category", c);
+                          setCategoryOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
