@@ -6,31 +6,41 @@ type Row = Record<string, unknown>;
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID || "";
 const API_KEY = process.env.API_KEY || "";
 
-function auth() {
-  return new google.auth.JWT({
-    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-}
+// Module-scope singletons so a warm serverless invocation reuses the cached
+// OAuth access token instead of re-authenticating with Google on every call.
+const authClient = new google.auth.JWT({
+  email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+});
+const sheetsApi = google.sheets({ version: "v4", auth: authClient });
 
 function sheets() {
-  return google.sheets({ version: "v4", auth: auth() });
+  return sheetsApi;
 }
 
-async function readTable(table: string) {
-  const res = await sheets().spreadsheets.values.get({
+// Reads the table and the _meta version in a single round trip.
+async function readTableWithVersion(table: string) {
+  const res = await sheets().spreadsheets.values.batchGet({
     spreadsheetId: SPREADSHEET_ID,
-    range: table,
+    ranges: [table, "_meta!A2"],
   });
-  const values = res.data.values || [];
-  if (!values.length) return { headers: [] as string[], rows: [] as Row[] };
+  const [tableRange, metaRange] = res.data.valueRanges || [];
+  const values = tableRange?.values || [];
+  const version = Number(metaRange?.values?.[0]?.[0]) || 0;
+
+  if (!values.length) return { headers: [] as string[], rows: [] as Row[], version };
   const headers = values[0].map(String);
   const rows: Row[] = values.slice(1).map((line, i) => {
     const obj: Row = { __row: i + 2 };
     headers.forEach((h, j) => (obj[h] = line[j] ?? ""));
     return obj;
   });
+  return { headers, rows, version };
+}
+
+async function readTable(table: string) {
+  const { headers, rows } = await readTableWithVersion(table);
   return { headers, rows };
 }
 
@@ -101,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     switch (action) {
       case "list": {
-        const { headers, rows } = await readTable(table);
+        const { headers, rows, version } = await readTableWithVersion(table);
         let data = rows.filter((r) => !isDeleted(r));
         if (p.category) data = data.filter((r) => String(r.category) === String(p.category));
         if (p.q) {
@@ -119,7 +129,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const total = data.length;
         const offset = Number(p.offset || 0);
         const limit = Math.min(Number(p.limit || 500), 500);
-        const version = await metaVersion(false);
         return res.status(200).json({
           ok: true,
           error: null,
@@ -130,10 +139,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       case "get": {
-        const { rows } = await readTable(table);
+        const { rows, version } = await readTableWithVersion(table);
         const row = rows.find((r) => String(r.id) === String(p.id));
         if (!row) return res.status(200).json({ ok: false, error: "not found", data: null });
-        const version = await metaVersion(false);
         return res.status(200).json({ ok: true, error: null, data: strip(row), version });
       }
 
@@ -189,9 +197,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case "stream": {
         const since = Number(p.since || 0);
-        const { rows } = await readTable(table);
+        const { rows, version } = await readTableWithVersion(table);
         const changed = rows.filter((r) => Number(r.version) > since).map(strip);
-        const version = await metaVersion(false);
         return res.status(200).json({ ok: true, error: null, data: changed, version });
       }
 
