@@ -73,6 +73,26 @@ async function metaVersion(bump = false): Promise<number> {
   return next;
 }
 
+async function readSettings(): Promise<Record<string, unknown>> {
+  try {
+    const res = await sheets().spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "_meta!B2" });
+    const raw = res.data.values?.[0]?.[0];
+    if (!raw) return {};
+    return JSON.parse(String(raw));
+  } catch {
+    return {};
+  }
+}
+
+async function writeSettings(settings: Record<string, unknown>): Promise<void> {
+  await sheets().spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "_meta!B2",
+    valueInputOption: "RAW",
+    requestBody: { values: [[JSON.stringify(settings)]] },
+  });
+}
+
 function strip(row: Row) {
   const out = { ...row };
   delete out.__row;
@@ -193,6 +213,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           requestBody: { values: [headers.map((h) => (merged[h] != null ? merged[h] : ""))] },
         });
         return res.status(200).json({ ok: true, error: null, data: { id: target.id, deleted: true }, version });
+      }
+
+      case "get_settings": {
+        const settings = await readSettings();
+        return res.status(200).json({ ok: true, error: null, data: settings });
+      }
+
+      case "set_settings": {
+        const current = await readSettings();
+        const patch = (p.data as Record<string, unknown>) || {};
+        const merged = { ...current, ...patch };
+        await writeSettings(merged);
+        return res.status(200).json({ ok: true, error: null, data: merged });
       }
 
       case "stream": {

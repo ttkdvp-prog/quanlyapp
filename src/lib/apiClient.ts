@@ -70,6 +70,11 @@ export const api = {
 
   stream: <T>(table: string, since: number) =>
     call<T[]>("GET", { action: "stream", table, since }),
+
+  getSettings: () => call<Record<string, unknown>>("GET", { action: "get_settings" }),
+
+  setSettings: (data: Record<string, unknown>) =>
+    call<Record<string, unknown>>("POST", { action: "set_settings", data }),
 };
 
 // ─── Parse helpers ───────────────────────────────────────────────────────────
@@ -89,6 +94,10 @@ export function parseApp(raw: App): ParsedApp {
 // ─── Mock data for demo when Apps Script not configured ──────────────────────
 
 function getMockData<T>(payload: Record<string, unknown>): Envelope<T> {
+  if (payload.action === "get_settings" || payload.action === "set_settings") {
+    return { ok: true, data: (payload.data as T) || ({} as T), error: null };
+  }
+
   const table = payload.table as string;
   const q = (payload.q as string || "").toLowerCase();
 

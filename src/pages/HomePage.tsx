@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, ExternalLink, ChevronRight, AlertCircle, Loader2, Link2, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, ExternalLink, ChevronRight, AlertCircle, Loader2, Link2, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { api, parseApp } from "../lib/apiClient";
 import { useSheetStream } from "../lib/useSheetStream";
 import type { App, ParsedApp } from "../types";
 import AppFormModal from "../components/AppFormModal";
+import CategoryOrderModal from "../components/CategoryOrderModal";
 import { toast } from "sonner";
 
 // Category order and colors
@@ -35,7 +36,7 @@ const CATEGORY_CONFIG: Record<string, { color: string; bg: string; border: strin
   },
 };
 
-const CATEGORY_ORDER = ["TIỆN ÍCH", "Googsheet", "ứng dụng", "công việc"];
+const DEFAULT_CATEGORY_ORDER = ["TIỆN ÍCH", "Googsheet", "ứng dụng", "công việc"];
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
@@ -190,6 +191,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingApp, setEditingApp] = useState<ParsedApp | null>(null);
+  const [showSortModal, setShowSortModal] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch apps from Google Sheets
@@ -207,6 +209,17 @@ export default function HomePage() {
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
+
+  // Saved category display order (shared across everyone via the sheet)
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => (await api.getSettings()).data,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const savedCategoryOrder = Array.isArray(settings?.categoryOrder)
+    ? (settings!.categoryOrder as string[])
+    : null;
 
   const baseApps = useMemo(() => rawApps ?? [], [rawApps]);
 
@@ -264,25 +277,27 @@ export default function HomePage() {
     return map;
   }, [filteredApps]);
 
-  // Sort categories
+  // Sort categories — saved order (if any) wins, falling back to the default
+  const categoryOrder = savedCategoryOrder ?? DEFAULT_CATEGORY_ORDER;
+
   const sortedCategories = useMemo(() => {
     const cats = Object.keys(grouped);
     return cats.sort((a, b) => {
-      const ia = CATEGORY_ORDER.indexOf(a);
-      const ib = CATEGORY_ORDER.indexOf(b);
+      const ia = categoryOrder.indexOf(a);
+      const ib = categoryOrder.indexOf(b);
       if (ia === -1 && ib === -1) return a.localeCompare(b);
       if (ia === -1) return 1;
       if (ib === -1) return -1;
       return ia - ib;
     });
-  }, [grouped]);
+  }, [grouped, categoryOrder]);
 
   const allCategories = useMemo(() => {
     const cats = new Set(liveApps.map((a) => a.category));
-    return CATEGORY_ORDER.filter((c) => cats.has(c)).concat(
-      [...cats].filter((c) => !CATEGORY_ORDER.includes(c))
+    return categoryOrder.filter((c) => cats.has(c)).concat(
+      [...cats].filter((c) => !categoryOrder.includes(c))
     );
-  }, [liveApps]);
+  }, [liveApps, categoryOrder]);
 
   const totalApps = filteredApps.length;
 
@@ -335,6 +350,18 @@ export default function HomePage() {
               );
             })}
           </div>
+
+          {/* Sort categories button */}
+          {allCategories.length > 1 && (
+            <button
+              type="button"
+              title="Sắp xếp nhóm danh mục"
+              onClick={() => setShowSortModal(true)}
+              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+            >
+              <ArrowUpDown size={16} />
+            </button>
+          )}
 
           {/* Add app button */}
           <button
@@ -423,6 +450,18 @@ export default function HomePage() {
           onSaved={() => {
             setEditingApp(null);
             queryClient.invalidateQueries({ queryKey: ["apps"] });
+          }}
+        />
+      )}
+
+      {/* Sort Categories Modal */}
+      {showSortModal && (
+        <CategoryOrderModal
+          categories={allCategories}
+          onClose={() => setShowSortModal(false)}
+          onSaved={(order) => {
+            setShowSortModal(false);
+            queryClient.setQueryData(["settings"], { ...(settings || {}), categoryOrder: order });
           }}
         />
       )}
