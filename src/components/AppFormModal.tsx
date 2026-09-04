@@ -15,6 +15,7 @@ const ROLES = [
 interface Props {
   onClose: () => void;
   onSaved: () => void;
+  existingCategories?: string[];
   editApp?: {
     id: string;
     name: string;
@@ -29,7 +30,7 @@ interface Props {
   };
 }
 
-export default function AppFormModal({ onClose, onSaved, editApp }: Props) {
+export default function AppFormModal({ onClose, onSaved, existingCategories = [], editApp }: Props) {
   const isEdit = !!editApp;
   const [saving, setSaving] = useState(false);
 
@@ -170,7 +171,9 @@ export default function AppFormModal({ onClose, onSaved, editApp }: Props) {
                 required
               />
               <datalist id="category-suggestions">
-                <option value="NHÂN SỰ" />
+                {existingCategories.map((c) => (
+                  <option key={c} value={c} />
+                ))}
               </datalist>
             </div>
             <div>

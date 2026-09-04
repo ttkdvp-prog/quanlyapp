@@ -405,6 +405,7 @@ export default function HomePage() {
       {/* Add App Modal */}
       {showAddModal && (
         <AppFormModal
+          existingCategories={allCategories}
           onClose={() => setShowAddModal(false)}
           onSaved={() => {
             setShowAddModal(false);
@@ -416,6 +417,7 @@ export default function HomePage() {
       {/* Edit App Modal */}
       {editingApp && (
         <AppFormModal
+          existingCategories={allCategories}
           editApp={editingApp}
           onClose={() => setEditingApp(null)}
           onSaved={() => {
