@@ -4,7 +4,6 @@ import { api } from "../lib/apiClient";
 import { toast } from "sonner";
 import type { AppLink } from "../types";
 
-const CATEGORIES = ["KẾ TOÁN", "MARKETING", "NHÂN SỰ", "TIỆN ÍCH"];
 const ROLES = [
   { value: "all", label: "Tất cả nhân viên" },
   { value: "admin", label: "Admin" },
@@ -37,7 +36,7 @@ export default function AppFormModal({ onClose, onSaved, editApp }: Props) {
   const [form, setForm] = useState({
     name: editApp?.name ?? "",
     description: editApp?.description ?? "",
-    category: editApp?.category ?? "TIỆN ÍCH",
+    category: editApp?.category ?? "",
     icon: editApp?.icon ?? "",
     url: editApp?.url ?? "",
     access_role: editApp?.access_role ?? "all",
@@ -161,15 +160,18 @@ export default function AppFormModal({ onClose, onSaved, editApp }: Props) {
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
                 Nhóm danh mục
               </label>
-              <select
+              <input
+                type="text"
+                list="category-suggestions"
                 value={form.category}
                 onChange={(e) => setField("category", e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition bg-white"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                placeholder="Ví dụ: NHÂN SỰ"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                required
+              />
+              <datalist id="category-suggestions">
+                <option value="NHÂN SỰ" />
+              </datalist>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
