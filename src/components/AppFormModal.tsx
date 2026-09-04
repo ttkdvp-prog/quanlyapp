@@ -7,9 +7,6 @@ import type { AppLink } from "../types";
 const ROLES = [
   { value: "all", label: "Tất cả nhân viên" },
   { value: "admin", label: "Admin" },
-  { value: "finance", label: "Kế toán" },
-  { value: "hr", label: "Nhân sự" },
-  { value: "marketing", label: "Marketing" },
 ];
 
 interface Props {
