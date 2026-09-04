@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { to: "/", label: "Quản lý App", icon: Grid3X3 },
+  { to: "/", label: "Địa chỉ", icon: Grid3X3 },
   { to: "/users", label: "Người dùng", icon: Users },
 ];
 
@@ -35,7 +35,7 @@ export default function AppShell() {
                   <LayoutGrid size={18} className="text-white" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-900 text-sm leading-none">Quản Lý App</div>
+                  <div className="font-bold text-slate-900 text-sm leading-none">Địa chỉ</div>
                 </div>
               </div>
               <button
@@ -80,7 +80,7 @@ export default function AppShell() {
                 <LayoutGrid size={17} className="text-white" />
               </div>
               <div className="hidden sm:block">
-                <div className="font-bold text-slate-900 text-sm leading-none">Quản Lý App</div>
+                <div className="font-bold text-slate-900 text-sm leading-none">Địa chỉ</div>
               </div>
             </div>
 
